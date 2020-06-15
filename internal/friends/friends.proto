@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+option go_package = "github.com/trailofbits/not-going-anywhere/internal/friends";
+
+package friends;
+
+service NotGoingAnywhere {
+    rpc RegisterPerson(RegisterRequest) returns (Person) {}
+    rpc GetPerson(PersonRequest) returns (People) {}
+    rpc GetPeople(Empty) returns (People) {}
+    rpc GetFriends(Person) returns (People) {}
+    rpc GetPosts(Person) returns (Posts) {}
+    rpc GetAllPosts(Empty) returns (Posts) {}
+    rpc AddPost(NewPost) returns (TrueForSuccess) {}
+    rpc AddFriend(Friendship) returns (TrueForSuccess) {}
+    rpc Unfriend(Friendship) returns (TrueForSuccess) {}
+}
+
+message Empty {
+
+}
+
+message RegisterRequest {
+    string uname = 1;
+}
+
+message Person {
+    string id = 1;
+    string uname = 2;
+}
+
+message PersonRequest {
+    string uname = 1;
+}
+
+message People {
+    repeated Person people = 1;
+}
+
+message Post {
+    string id = 1;
+    string uname = 2;
+    string text = 3;
+}
+
+message Posts {
+    repeated Post posts = 1;
+}
+
+message Friendship {
+    Person orig =  1;
+    Person friend = 2;
+}
+
+message TrueForSuccess {
+    bool status = 1;
+}
+
+message NewPost {
+    Person user = 1;
+    string post = 2;
+}
