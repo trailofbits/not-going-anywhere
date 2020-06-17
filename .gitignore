@@ -6,4 +6,6 @@
 main
 ping_client_secure
 ping_server_secure
+friends_server_net
+friends_client_net
 web

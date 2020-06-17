@@ -52,11 +52,16 @@ func main() {
 func indexPage(w http.ResponseWriter, r *http.Request) {
     log.Print("recieved index request")
 	session, _ := sessionStore.Get(r, "not-going-anywhere")
+    next := r.FormValue("returnURL")
+
+    if next == "" {
+        next = "/posts"
+    }
 
 	if auth, ok := session.Values["authenticated"].(bool); !ok || !auth {
         http.Redirect(w, r, "/login", 303)
 	} else {
-		http.Redirect(w, r, "/posts", 303)
+		http.Redirect(w, r, next, 303)
 	}
 }
 
