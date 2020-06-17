@@ -2,3 +2,5 @@
 *.swo
 *.pyc
 *.o
+*.db
+main

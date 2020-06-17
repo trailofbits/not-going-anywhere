@@ -1,0 +1,22 @@
+<html>
+  <head>
+    <title>Not Go-ing Anywhere Users</title>
+  </head>
+  <body>
+    <ul>
+    {{if .Friends}}
+      {{range .Users}}
+        <li>
+          <a href="/friends/unfriend/{{.Uid}}">{{.Uname}}</a>
+        </li>
+      {{end}}
+    {{else}}
+      {{range .Users}}
+        <li>
+          <a href="/friends/add/{{.Uid}}">{{.Uname}}</a>
+        </li>
+      {{end}}
+    {{end}}
+    </ul>
+  </body>
+</html>

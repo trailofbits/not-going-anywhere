@@ -1,0 +1,23 @@
+<html>
+  <head>
+    <title>Not Go-ing Anywhere Posts</title>
+  </head>
+  <body>
+    <table>
+      <tr>
+        <td>
+          <form method="POST" action="/posts/add">
+            <label for="posttext">Post:</label>
+            <input name="posttext">
+            <input type="submit" value="Post">
+          </form>
+        </td>
+      </tr>
+    {{range .Posts}}
+      <tr>
+        <td>{{.Uname}}</td>
+        <td>{{.Text}}</td>
+      </tr>
+    {{end}}
+  </body>
+</html>
