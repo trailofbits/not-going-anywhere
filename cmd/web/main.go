@@ -173,7 +173,14 @@ func registerUser(w http.ResponseWriter, r *http.Request) {
         session.Values["username"] = rperson.GetUname()
         session.Values["uid"] = rperson.GetId()
         session.Save(r, w)
-        http.Redirect(w, r, "/posts", 303)
+
+        next := r.FormValue("returnURL")
+
+        if next == "" {
+            next = "/posts"
+        }
+
+        http.Redirect(w, r, next, 303)
 	} else {
         tmpl, err := template.ParseFiles("templates/register.html")
         if err != nil {
@@ -228,7 +235,14 @@ func loginUser(w http.ResponseWriter, r *http.Request) {
         session.Values["username"] = rperson.GetUname()
         session.Values["uid"] = rperson.GetId()
         session.Save(r, w)
-        http.Redirect(w, r, "/posts", 303)
+
+        next := r.FormValue("returnURL")
+
+        if next == "" {
+            next = "/posts"
+        }
+
+        http.Redirect(w, r, next, 303)
 	} else {
         tmpl, err := template.ParseFiles("templates/login.html")
         if err != nil {
