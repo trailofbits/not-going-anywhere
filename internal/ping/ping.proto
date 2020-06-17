@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option go_package = "github.com/trailofbits/not-going-anywhere/internal/ping";
+
+package ping;
+
+service PingNGA {
+    rpc PingSensitive(Message) returns (Response) {};
+}
+
+message Message {
+    string data = 1;
+}
+
+message Response {
+    string data = 1;
+}
