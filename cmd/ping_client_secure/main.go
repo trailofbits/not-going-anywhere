@@ -5,6 +5,7 @@ import (
     "log"
     "time"
     "fmt"
+    "crypto/tls"
 
     // external dependencies
     "google.golang.org/grpc"
@@ -19,14 +20,18 @@ const (
 )
 
 func main() {
-	creds, err := credentials.NewClientTLSFromFile("cert/server.crt", "")
-	if err != nil {
-		log.Fatalf("could not load tls cert: %s", err)
-	}
+	//creds, err := credentials.NewClientTLSFromFile("cert/server.crt", "")
+	//if err != nil {
+    //    log.Fatalf("could not load tls cert: %s", err)
+    //}
+
+    config := &tls.Config{
+        InsecureSkipVerify: true,
+    }
 
 	log.Print("loaded cert...")
 
-    conn, err := grpc.Dial(address, grpc.WithTransportCredentials(creds), grpc.WithTimeout(1000 * time.Millisecond))
+    conn, err := grpc.Dial(address, grpc.WithTransportCredentials(credentials.NewTLS(config)), grpc.WithTimeout(1000 * time.Millisecond))
 
 	log.Print("gRPC dialed...")
 

@@ -4,3 +4,6 @@
 *.o
 *.db
 main
+ping_client_secure
+ping_server_secure
+web
