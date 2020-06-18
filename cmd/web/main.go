@@ -1,103 +1,102 @@
 package main
 
 import (
-    "context"
-    "log"
-    //"os"
-    "time"
-    "net/http"
-    "text/template"
+	"context"
+	"log"
+	"net/http"
+	"text/template"
+	"time"
 
-    "github.com/gorilla/mux"
+	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
-    "google.golang.org/grpc"
+	"google.golang.org/grpc"
 
-    pb "github.com/trailofbits/not-going-anywhere/internal/friends"
+	pb "github.com/trailofbits/not-going-anywhere/internal/friends"
 )
 
 type UserCtx struct {
-    Users []*pb.Person
+	Users []*pb.Person
 }
 
 type PostCtx struct {
-    Posts []*pb.Post
+	Posts []*pb.Post
 }
 
 const (
-    serverAddress = "localhost:5000"
-    defun = "trailofbits"
-    address = ":5080"
+	serverAddress = "localhost:5000"
+	defun         = "trailofbits"
+	address       = ":5080"
 )
 
 var (
-	key = []byte("xxzoL3R9zA25mztvbm9AWwBdCEqiVvgj")
+	key          = []byte("xxzoL3R9zA25mztvbm9AWwBdCEqiVvgj")
 	sessionStore = sessions.NewCookieStore(key)
 )
 
 func main() {
-    router  := mux.NewRouter()
-    router.Handle("/", http.HandlerFunc(indexPage))
-    router.Handle("/posts/add", http.HandlerFunc(addPosts)).Methods("POST")
-    router.Handle("/posts", http.HandlerFunc(listPosts)).Methods("GET")
-    router.Handle("/posts/{person}", http.HandlerFunc(listPersonPosts)).Methods("GET")
-    router.Handle("/friends", http.HandlerFunc(listFriends)).Methods("GET")
-    router.Handle("/friends/add/{person}", http.HandlerFunc(addFriend)).Methods("GET")
-    router.Handle("/friends/unfriend/{person}", http.HandlerFunc(unfriendFriend)).Methods("GET")
-    router.Handle("/register", http.HandlerFunc(registerUser))
-    router.Handle("/login", http.HandlerFunc(loginUser))
+	router := mux.NewRouter()
+	router.Handle("/", http.HandlerFunc(indexPage))
+	router.Handle("/posts/add", http.HandlerFunc(addPosts)).Methods("POST")
+	router.Handle("/posts", http.HandlerFunc(listPosts)).Methods("GET")
+	router.Handle("/posts/{person}", http.HandlerFunc(listPersonPosts)).Methods("GET")
+	router.Handle("/friends", http.HandlerFunc(listFriends)).Methods("GET")
+	router.Handle("/friends/add/{person}", http.HandlerFunc(addFriend)).Methods("GET")
+	router.Handle("/friends/unfriend/{person}", http.HandlerFunc(unfriendFriend)).Methods("GET")
+	router.Handle("/register", http.HandlerFunc(registerUser))
+	router.Handle("/login", http.HandlerFunc(loginUser))
 	//router.Handle("/logout", http.HandlerFunc(logoutUser))
-    http.ListenAndServe(address, router)
+	http.ListenAndServe(address, router)
 }
 
 func indexPage(w http.ResponseWriter, r *http.Request) {
-    log.Print("recieved index request")
+	log.Print("recieved index request")
 	session, _ := sessionStore.Get(r, "not-going-anywhere")
-    next := r.FormValue("returnURL")
+	next := r.FormValue("returnURL")
 
-    if next == "" {
-        next = "/posts"
-    }
+	if next == "" {
+		next = "/posts"
+	}
 
-	if auth, ok := session.Values["authenticated"].(bool); !ok || !auth {
-        http.Redirect(w, r, "/login", 303)
+	if auth := session.Values["authenticated"].(bool); !auth {
+		http.Redirect(w, r, "/login", 303)
 	} else {
 		http.Redirect(w, r, next, 303)
 	}
 }
 
 func addPosts(w http.ResponseWriter, r *http.Request) {
-    w.Header().Set("Content-Type", "text/html")
-    w.Write([]byte("<h1>Working</h1>"))
+	w.Header().Set("Content-Type", "text/html")
+	w.Write([]byte("<h1>Working</h1>"))
 }
 
 func listPosts(w http.ResponseWriter, r *http.Request) {
-    w.Header().Set("Content-Type", "text/html")
-    w.Write([]byte("<h1>Working</h1>"))
-    ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-    defer cancel()
-    conn, err := grpc.Dial(serverAddress, grpc.WithInsecure(), grpc.WithBlock())
+	w.Header().Set("Content-Type", "text/html")
+	w.Write([]byte("<h1>Working</h1>"))
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	conn, err := grpc.Dial(serverAddress, grpc.WithInsecure(), grpc.WithBlock())
 
-    if err != nil {
-        log.Fatalf("could not connect to server; make sure you have 'friends_server_net' running: %v", err)
-    }
+	if err != nil {
+		log.Fatalf("could not connect to server; make sure you have 'friends_server_net' running: %v", err)
+	}
 
-    defer conn.Close()
+	defer conn.Close()
 
-    client := pb.NewNotGoingAnywhereClient(conn)
+	client := pb.NewNotGoingAnywhereClient(conn)
 
-    resposts, err := client.GetAllPosts(ctx, &pb.Empty{})
+	resposts, err := client.GetAllPosts(ctx, &pb.Empty{})
 
-    if err != nil {
-        log.Print("failed to load posts")
-    }
+	if err != nil {
+		log.Print("failed to load posts")
+	}
 
-    posts := PostCtx{Posts: resposts.GetPosts()}
+	posts := PostCtx{Posts: resposts.GetPosts()}
 
-    tmpl, err := template.ParseFiles("templates/main.html")
-    if err != nil {
-        log.Print("login template failed")
-    }
-    tmpl.Execute(w, posts)
+	tmpl, err := template.ParseFiles("templates/main.html")
+	if err != nil {
+		log.Print("login template failed")
+	}
+	tmpl.Execute(w, posts)
 }
 
 func listPersonPosts(w http.ResponseWriter, r *http.Request) {
@@ -106,13 +105,13 @@ func listPersonPosts(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("recieved requestion for person %s", personId)
 
-    w.Header().Set("Content-Type", "text/html")
-    w.Write([]byte("<h1>Working</h1>"))
+	w.Header().Set("Content-Type", "text/html")
+	w.Write([]byte("<h1>Working</h1>"))
 }
 
 func listFriends(w http.ResponseWriter, r *http.Request) {
-    w.Header().Set("Content-Type", "text/html")
-    w.Write([]byte("<h1>Working</h1>"))
+	w.Header().Set("Content-Type", "text/html")
+	w.Write([]byte("<h1>Working</h1>"))
 }
 
 func addFriend(w http.ResponseWriter, r *http.Request) {
@@ -120,8 +119,8 @@ func addFriend(w http.ResponseWriter, r *http.Request) {
 	personId := vars["person"]
 	log.Printf("recieved requestion for person %s", personId)
 
-    w.Header().Set("Content-Type", "text/html")
-    w.Write([]byte("<h1>Working</h1>"))
+	w.Header().Set("Content-Type", "text/html")
+	w.Write([]byte("<h1>Working</h1>"))
 }
 
 func unfriendFriend(w http.ResponseWriter, r *http.Request) {
@@ -129,130 +128,130 @@ func unfriendFriend(w http.ResponseWriter, r *http.Request) {
 	personId := vars["person"]
 	log.Printf("recieved requestion for person %s", personId)
 
-    w.Header().Set("Content-Type", "text/html")
-    w.Write([]byte("<h1>Working</h1>"))
+	w.Header().Set("Content-Type", "text/html")
+	w.Write([]byte("<h1>Working</h1>"))
 }
 
 func registerUser(w http.ResponseWriter, r *http.Request) {
-    w.Header().Set("Content-Type", "text/html")
+	w.Header().Set("Content-Type", "text/html")
 	if r.Method == "POST" {
-        err := r.ParseForm()
+		err := r.ParseForm()
 
-        if err != nil {
-            log.Print("fatal parsing error")
-        }
+		if err != nil {
+			log.Print("fatal parsing error")
+		}
 
-        username := r.Form.Get("username")
+		username := r.Form.Get("username")
 
-        ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-        defer cancel()
-        conn, err := grpc.Dial(serverAddress, grpc.WithInsecure(), grpc.WithBlock())
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		conn, err := grpc.Dial(serverAddress, grpc.WithInsecure(), grpc.WithBlock())
 
-        if err != nil {
-            log.Fatalf("could not connect to server; make sure you have 'friends_server_net' running: %v", err)
-        }
+		if err != nil {
+			log.Fatalf("could not connect to server; make sure you have 'friends_server_net' running: %v", err)
+		}
 
-        defer conn.Close()
+		defer conn.Close()
 
-        client := pb.NewNotGoingAnywhereClient(conn)
+		client := pb.NewNotGoingAnywhereClient(conn)
 
-        // check if a user  exists  prior to registering them
-        rpeople, err := client.GetPerson(ctx, &pb.PersonRequest{Uname: username})
+		// check if a user  exists  prior to registering them
+		rpeople, err := client.GetPerson(ctx, &pb.PersonRequest{Uname: username})
 
-        if err == nil {
-            for _, value := range rpeople.People {
-                if value.GetUname() == username {
-                    w.Write([]byte(`<h1>User Exists</h1>`))
-                    return
-                }
-            }
-        }
+		if err == nil {
+			for _, value := range rpeople.People {
+				if value.GetUname() == username {
+					w.Write([]byte(`<h1>User Exists</h1>`))
+					return
+				}
+			}
+		}
 
-        rperson, err := client.RegisterPerson(ctx, &pb.RegisterRequest{Uname: username})
+		rperson, err := client.RegisterPerson(ctx, &pb.RegisterRequest{Uname: username})
 
-        if err != nil {
-            log.Fatalf("could not register user: %n", err)
-        }
-        session, _ := sessionStore.Get(r, "not-going-anywhere")
-        session.Values["authenticated"] = true
-        session.Values["username"] = rperson.GetUname()
-        session.Values["uid"] = rperson.GetId()
-        session.Save(r, w)
+		if err != nil {
+			log.Fatalf("could not register user: %n", err)
+		}
+		session, _ := sessionStore.Get(r, "not-going-anywhere")
+		session.Values["authenticated"] = true
+		session.Values["username"] = rperson.GetUname()
+		session.Values["uid"] = rperson.GetId()
+		session.Save(r, w)
 
-        next := r.FormValue("returnURL")
+		next := r.FormValue("returnURL")
 
-        if next == "" {
-            next = "/posts"
-        }
+		if next == "" {
+			next = "/posts"
+		}
 
-        http.Redirect(w, r, next, 303)
+		http.Redirect(w, r, next, 303)
 	} else {
-        tmpl, err := template.ParseFiles("templates/register.html")
-        if err != nil {
-            log.Print("login template failed")
-        }
-        tmpl.Execute(w, nil)
+		tmpl, err := template.ParseFiles("templates/register.html")
+		if err != nil {
+			log.Print("login template failed")
+		}
+		tmpl.Execute(w, nil)
 	}
 }
 
 func loginUser(w http.ResponseWriter, r *http.Request) {
-    w.Header().Set("Content-Type", "text/html")
+	w.Header().Set("Content-Type", "text/html")
 	if r.Method == "POST" {
-        err := r.ParseForm()
+		err := r.ParseForm()
 
-        if err != nil {
-            log.Print("fatal parsing error")
-        }
+		if err != nil {
+			log.Print("fatal parsing error")
+		}
 
-        username := r.Form.Get("username")
+		username := r.Form.Get("username")
 
-        ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-        defer cancel()
-        conn, err := grpc.Dial(serverAddress, grpc.WithInsecure(), grpc.WithBlock())
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		conn, err := grpc.Dial(serverAddress, grpc.WithInsecure(), grpc.WithBlock())
 
-        if err != nil {
-            log.Fatalf("could not connect to server; make sure you have 'friends_server_net' running: %v", err)
-        }
+		if err != nil {
+			log.Fatalf("could not connect to server; make sure you have 'friends_server_net' running: %v", err)
+		}
 
-        defer conn.Close()
+		defer conn.Close()
 
-        client := pb.NewNotGoingAnywhereClient(conn)
+		client := pb.NewNotGoingAnywhereClient(conn)
 
-        // check if a user  exists  prior to registering them
-        rpeople, err := client.GetPerson(ctx, &pb.PersonRequest{Uname: username})
+		// check if a user  exists  prior to registering them
+		rpeople, err := client.GetPerson(ctx, &pb.PersonRequest{Uname: username})
 
-        var rperson *pb.Person
+		var rperson *pb.Person
 
-        if err == nil {
-            for _, value := range rpeople.People {
-                if value.GetUname() == username {
-                    rperson = value
-                }
-            }
-        }
+		if err == nil {
+			for _, value := range rpeople.People {
+				if value.GetUname() == username {
+					rperson = value
+				}
+			}
+		}
 
-        if rperson == nil {
-            http.Redirect(w, r, "/login", 303)
-        }
+		if rperson == nil {
+			http.Redirect(w, r, "/login", 303)
+		}
 
-        session, _ := sessionStore.Get(r, "not-going-anywhere")
-        session.Values["authenticated"] = true
-        session.Values["username"] = rperson.GetUname()
-        session.Values["uid"] = rperson.GetId()
-        session.Save(r, w)
+		session, _ := sessionStore.Get(r, "not-going-anywhere")
+		session.Values["authenticated"] = true
+		session.Values["username"] = rperson.GetUname()
+		session.Values["uid"] = rperson.GetId()
+		session.Save(r, w)
 
-        next := r.FormValue("returnURL")
+		next := r.FormValue("returnURL")
 
-        if next == "" {
-            next = "/posts"
-        }
+		if next == "" {
+			next = "/posts"
+		}
 
-        http.Redirect(w, r, next, 303)
+		http.Redirect(w, r, next, 303)
 	} else {
-        tmpl, err := template.ParseFiles("templates/login.html")
-        if err != nil {
-            log.Print("login template failed")
-        }
-        tmpl.Execute(w, nil)
+		tmpl, err := template.ParseFiles("templates/login.html")
+		if err != nil {
+			log.Print("login template failed")
+		}
+		tmpl.Execute(w, nil)
 	}
 }
