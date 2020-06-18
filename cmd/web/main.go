@@ -11,11 +11,13 @@ import (
     "github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
     "google.golang.org/grpc"
+    "github.com/unrolled/secure"
 
     pb "github.com/trailofbits/not-going-anywhere/internal/friends"
 )
 
 type UserCtx struct {
+    Search string
     Users []*pb.Person
 }
 
@@ -34,9 +36,27 @@ var (
 	sessionStore = sessions.NewCookieStore(key)
 )
 
+func cachingHandler(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0")
+        next.ServeHTTP(w, r)
+    })
+}
+
 func main() {
     router  := mux.NewRouter()
-    router.Handle("/", http.HandlerFunc(indexPage))
+
+    secureMiddleware := secure.New(secure.Options{
+        STSSeconds:            31536000,
+        STSIncludeSubdomains:  true,
+        STSPreload:            true,
+        FrameDeny:             true,
+        ContentTypeNosniff:    true,
+        BrowserXssFilter:      true,
+        ContentSecurityPolicy: "script-src $NONCE",
+    })
+
+    router.Handle("/", cachingHandler(http.HandlerFunc(indexPage)))
     router.Handle("/posts/add", http.HandlerFunc(addPosts)).Methods("POST")
     router.Handle("/posts", http.HandlerFunc(listPosts)).Methods("GET")
     router.Handle("/posts/{person}", http.HandlerFunc(listPersonPosts)).Methods("GET")
@@ -44,7 +64,7 @@ func main() {
     router.Handle("/friends/add/{person}", http.HandlerFunc(addFriend)).Methods("GET")
     router.Handle("/friends/unfriend/{person}", http.HandlerFunc(unfriendFriend)).Methods("GET")
     router.Handle("/register", http.HandlerFunc(registerUser))
-    router.Handle("/login", http.HandlerFunc(loginUser))
+    router.Handle("/login", secureMiddleware.Handler(http.HandlerFunc(loginUser)))
 	//router.Handle("/logout", http.HandlerFunc(logoutUser))
     http.ListenAndServe(address, router)
 }
@@ -112,7 +132,37 @@ func listPersonPosts(w http.ResponseWriter, r *http.Request) {
 
 func listFriends(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "text/html")
-    w.Write([]byte("<h1>Working</h1>"))
+    search := r.FormValue("search")
+
+
+    ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+    defer cancel()
+    conn, err := grpc.Dial(serverAddress, grpc.WithInsecure(), grpc.WithBlock())
+
+    if err != nil {
+        log.Fatalf("could not connect to server; make sure you have 'friends_server_net' running: %v", err)
+    }
+
+    defer conn.Close()
+
+    client := pb.NewNotGoingAnywhereClient(conn)
+    var people []*pb.Person
+
+    if search == "" {
+        rpeople, _ := client.GetPeople(ctx, &pb.Empty{})
+        people = rpeople.People
+    } else {
+        rpeople, _ := client.GetPerson(ctx, &pb.PersonRequest{Uname: search})
+        people = rpeople.People
+    }
+
+    users := UserCtx{Search: search, Users: people}
+
+    tmpl, err := template.ParseFiles("templates/users.html")
+    if err != nil {
+        log.Print("list template failed")
+    }
+    tmpl.Execute(w, users)
 }
 
 func addFriend(w http.ResponseWriter, r *http.Request) {

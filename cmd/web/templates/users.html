@@ -3,6 +3,9 @@
     <title>Not Go-ing Anywhere Users</title>
   </head>
   <body>
+    {{if ne .Search ""}}
+      <p>search results for {{.Search}}
+    {{end}}
     <ul>
     {{if .Friends}}
       {{range .Users}}
