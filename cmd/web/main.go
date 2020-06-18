@@ -77,7 +77,7 @@ func indexPage(w http.ResponseWriter, r *http.Request) {
 		next = "/posts"
 	}
 
-	if auth := session.Values["authenticated"].(bool); !auth {
+	if auth, ok := session.Values["authenticated"].(bool); !ok || !auth {
 		http.Redirect(w, r, "/login", 303)
 	} else {
 		http.Redirect(w, r, next, 303)
@@ -91,10 +91,15 @@ func addPosts(w http.ResponseWriter, r *http.Request) {
 
 func listPosts(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte("<h1>Working</h1>"))
+	w.Write([]byte("<h1>Posts</h1>"))
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	conn, err := grpc.Dial(serverAddress, grpc.WithInsecure(), grpc.WithBlock())
+	session, _ := sessionStore.Get(r, "not-going-anywhere")
+
+	if auth := session.Values["authenticated"].(bool); !auth {
+		http.Redirect(w, r, "/login", 303)
+    }
 
 	if err != nil {
 		log.Fatalf("could not connect to server; make sure you have 'friends_server_net' running: %v", err)
