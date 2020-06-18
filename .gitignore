@@ -1,14 +1,14 @@
-cmd/directory_permissions/directory_permissions
-cmd/friends_client_net/friends_client_net
-cmd/friends_client_uds/friends_client_uds
-cmd/friends_server_net/friends_server_net
-cmd/friends_server_uds/friends_server_uds
-cmd/ping_client/ping_client
-cmd/ping_client_secure/ping_client_secure
-cmd/ping_server/ping_server
-cmd/ping_server_secure/ping_server_secure
-cmd/symlink_attack/symlink_attack
-cmd/web/web
+directory_permissions
+friends_client_net
+friends_client_uds
+friends_server_net
+friends_server_uds
+ping_client
+ping_client_secure
+ping_server
+ping_server_secure
+symlink_attack
+web
 
 main
 proof
